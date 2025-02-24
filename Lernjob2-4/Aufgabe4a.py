@@ -17,6 +17,7 @@ def print_height(drone):
 
 def main():
     try:
+        first = False
         run = True
         drone = Tello()
         drone.connect()
@@ -41,7 +42,19 @@ def main():
 
         def on_press(key):
             nonlocal run
+            nonlocal first
             try:
+                if first is False:
+                    first = True
+                    drone.streamoff()
+                    time.sleep(0.5)
+                    drone.streamon()
+                img = drone.get_frame_read().frame
+                if img is None:
+                    print("Kein Bild vom Stream erhalten")
+                print("Kamera")
+                cv2.resize(img, (360, 240))
+                cv2.imshow("Image", img)
                 if key.char == 'b':
                     run = False
                     drone.land()
@@ -80,16 +93,10 @@ def main():
                     drone.flip_left()
                 elif key.char == 'l':
                     drone.flip_right()
-                elif key.char == 'c':
-                    drone.streamoff()
-                    time.sleep(0.5)
-                    drone.streamon()
-                    img = drone.get_frame_read().frame
-                    img = cv2.resize(img, (360, 240))
-                    cv2.imshow("Image", img)
                 elif key.char == 'x':
                     drone.streamoff()
                 send_control()
+                cv2.waitKey(2)
             except AttributeError:
                 pass
             except Exception as e:

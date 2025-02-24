@@ -53,7 +53,6 @@ def main():
                 drone.flip_left()
             if keyboard.is_pressed('l'):
                 drone.flip_right()
-            printbattery_status(drone)
 
     except Exception as e:
         print(f"Fehler: {e}")

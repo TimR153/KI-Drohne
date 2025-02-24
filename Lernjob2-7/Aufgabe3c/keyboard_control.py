@@ -1,0 +1,73 @@
+from pynput import keyboard
+
+
+def control_drone(drone, run_flag):
+    # Dictionary to track multiple key presses
+    keys_pressed = {
+        'up_down': 0,  # Up/Down movement
+        'forward_backward': 0,  # Forward/Backward movement
+        'left_right': 0,  # Left/Right movement
+        'yaw': 0  # Rotation
+    }
+
+    def send_control():
+        drone.send_rc_control(
+            keys_pressed['left_right'],
+            keys_pressed['forward_backward'],
+            keys_pressed['up_down'],
+            keys_pressed['yaw']
+        )
+
+    def on_press(key):
+        try:
+            if key.char == 'b':
+                run_flag.clear()
+                drone.land()
+                print("Drohne gelandet.")
+            elif key.char == 't':
+                drone.takeoff()
+            elif key.char == 'v':
+                run_flag.clear()
+                drone.emergency()
+                print("Notfall beendet.")
+            elif key.char == 'w':
+                keys_pressed['forward_backward'] = 50
+            elif key.char == 's':
+                keys_pressed['forward_backward'] = -50
+            elif key.char == 'a':
+                keys_pressed['left_right'] = -50
+            elif key.char == 'd':
+                keys_pressed['left_right'] = 50
+            elif key.char == ' ':  # Space key
+                keys_pressed['up_down'] = 50
+            elif key == keyboard.Key.shift:
+                keys_pressed['up_down'] = -50
+            elif key.char == 'q':
+                keys_pressed['yaw'] = -50
+            elif key.char == 'e':
+                keys_pressed['yaw'] = 50
+            send_control()
+        except AttributeError:
+            pass
+        except Exception as e:
+            print(f"Fehler bei der Verarbeitung der Taste: {e}")
+
+    def on_release(key):
+        try:
+            if key.char in ['w', 's']:
+                keys_pressed['forward_backward'] = 0
+            elif key.char in ['a', 'd']:
+                keys_pressed['left_right'] = 0
+            elif key.char == ' ':
+                keys_pressed['up_down'] = 0
+            elif key == keyboard.Key.shift:
+                keys_pressed['up_down'] = 0
+            elif key.char in ['q', 'e']:
+                keys_pressed['yaw'] = 0
+            send_control()
+        except AttributeError:
+            pass
+
+    with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
+        while run_flag.is_set():
+            listener.join(0.1)
